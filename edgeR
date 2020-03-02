@@ -1,0 +1,65 @@
+directory <- "~/Documents/Comp_Micro/Tuxedo/htseqresults"
+setwd(directory)
+library("edgeR")
+all.count <-read.table(file="UTI5.1A.txt",row.names=1,header=T)
+
+group <- c(rep("CK", 3), rep("treat", 3))
+
+
+
+DE <- function(x,y){
+
+a=3
+b=3
+
+cds <- DGEList(x,group =y)
+cds <- calcNormFactors(cds)
+cds <- estimateCommonDisp(cds,verbose=TRUE)
+cds <- estimateTagwiseDisp(cds)
+cpmcounts <- cpm(cds$counts+1) 
+log2counts <-log2(cds$counts+1)
+write.table(file=paste(y[4],"_vs_",y[1],"RPM.txt",sep=""),cpmcounts,quote=F,sep="\t")
+exon.length <- read.table(file="/genome/Gene.exon.len.txt",header=T,row.names=1)
+rpkm1 <- function(x) rpkm(x,exon.length)
+#apply(cds$counts,2,rpkm1)
+apply(cds$counts,2,rpkm1) ->rpkm11
+write.table(file=paste(y[4],"_vs_",y[1],"rpkm.txt",sep=""),rpkm11,quote=F,sep="\t")
+#write.table(file=paste(y[4],"CPM.txt",sep=""),cpm1,quote=F,sep="\t")
+#pdf(file="SPL.pairplot.pdf")
+pdf(file=paste(y[4],"_vs_",y[1],".pairplot.pdf",sep=""))
+panel.cor <- function(x,y, ...)
+{ 
+  par(usr=c(0,1,0,1))
+   txt <- as.character(format(cor(x,y),digits=4))
+   text(0.5,0.5,txt,cex =2*abs(cor(x,y)))
+}
+pairs(log2counts[,1:(a+b)],upper.panel=panel.cor,main=paste("Relationship of  samples in " ,y[4], " RNA-Seq",sep=""))
+
+
+dev.off()
+
+
+
+tcounts <- t(cpmcounts)
+
+pca.total <- prcomp(log2(tcounts), retx=TRUE)
+pdf(paste("pca.",y[4],"_vs_",y[1],".pdf",sep=""))
+#par(mar=c(5.1, 4.1, 7.1, 8.1), xpd=TRUE)
+round(100*summary(pca.total)$importance[2,1],digits=2) -> c
+round(100*summary(pca.total)$importance[2,2],digits=2) -> d
+plot(pca.total$x[,1:2], pch=c(rep(15,a),rep(16,b)),  xlab=paste("PC1(",c,"% Proportion of Variance)"),ylab=paste("PC2(",d,"%) Proportion of Variance"),col=c(rep("black",a),rep("red",b)),main="PCA Plot of Samples")
+text(pca.total$x[,1:2], c(row.names(pca.total$x)),font=0.3,col=c(rep("black",a),rep("red",b)))
+#legend("right",inset=c(-0.35,0),cex=1.2,border=F, c(row.names(pca.total$x)),pch=c(rep(15,a),rep(16,b)), col=c(rep("black",a),rep("red",b)),bty="n")
+
+#legend("bottomright",cex=0.8,border=F, c(row.names(pca.total$x)),pch=c(15:14+a), col=c(rep("black",a),rep("red",b)),bty="n")
+dev.off()
+
+et.RCSC <-exactTest(cds,pair=c(y[1],y[4]))
+rawcount <-as.matrix(x)[(rownames(subset(topTags(et.RCSC,n=40000)$table,FDR<0.05&abs(logFC) >=  1))),]
+rawcount1 <-as.matrix(x)[(rownames(subset(topTags(et.RCSC,n=40000)$table,FDR<0.05&abs(logFC) >=  0.58))),]
+rawcount2 <-as.matrix(x)[(rownames(topTags(et.RCSC,n=100000)$table,)),]
+write.table(file=paste(y[4],"_vs_",y[1],".fdr5.txt",sep=""),cbind(subset(topTags(et.RCSC,n=40000)$table,FDR<0.05&abs(logFC) >=  1),rawcount),quote=F,sep="\t")
+write.table(file=paste(y[4],"_vs_",y[1],".1.5fdr5.txt",sep=""),cbind(subset(topTags(et.RCSC,n=40000)$table,FDR<0.05&abs(logFC) >=  0.58),rawcount1),quote=F,sep="\t")
+write.table(file=paste(y[4],"_vs_",y[1],"_diff.txt",sep=""),cbind(topTags(et.RCSC,n=100000)$table,rawcount2),sep="\t",quote=F)
+}
+DE(all.count,group)
