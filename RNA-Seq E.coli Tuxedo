@@ -1,0 +1,113 @@
+#! /bin/bash
+chmod +x E.coli_QC_Mapping
+#NOTE: if you want to analyze Transcriptome data with three replicates for Differential Expression, this code can be edited
+
+
+################################################################
+#gzip files recursive
+
+#Quality Check (FASTA)
+gunzip -r /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R1.fastq.gz
+gunzip -r /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R2.fastq.gz
+
+################################################################ 
+#If desired, turn FASTQ -> FASTA to save size
+#-Q33 parameter tells that Illumina is being used, rather than Sanger
+#./fastq_to_fasta -i /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R1.fastq -o /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R1 -Q33
+#./fastq_to_fasta -i /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R1.fastq -o /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R2 -Q33
+#cd /work_zfs2/sukem065/software/
+
+###quality trimming 
+cd /home/jonathan7/Documents/Comp_Micro/Schreiber/gzip_prac/
+#R1
+prinseq-lite.pl -min_len 20 -ns_max_n 8 -min_qual_mean 15 -trim_qual_left 15 -trim_qual_right 15 -trim_tail_left 40 -trim_tail_right 40 - out_format 3 -fastq /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R1 -out_good /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R1_qual -out_bad /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R1_bad
+
+#R2
+prinseq-lite.pl -min_len 20 -ns_max_n 8 -min_qual_mean 15 -trim_qual_left 15 -trim_qual_right 15 -trim_tail_left 40 -trim_tail_right 40 - out_format 3 -fastq /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R2 -out_good /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R2_qual -out_bad /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R2_bad
+
+################################################################ 
+###adapter trimming 
+cd /home/jonathan7/Documents/Comp_Micro/RNA-Seq/
+#Pair End 1
+cutadapt -g TGGTGGAGCTGGCGGGAGTTGAACCCGCGTCCGAAATTCCTACATCCTCGGTACTACATGC -g AAAAAAACGCCTGCTCTTATTACGGAGCAGGCGTTAAAACAGGTCTGTATGA -g CGGACGGACACGCCACTAACAAACTAG -g AAAAGGGAGCACTGTATTCACAGTGCTCCCGGTTCGTTTCGCAGCATT -g CTTTACATTCGCTTGCCAGCTG -g CGGACGGACACGCCACTAACAAACTAGCCTG -g GGTGAAACTGACCGATAAGCCGGGTTCTGTCGTGGACAGTCATTCATCTAGGCCAGCAATCGCTCACT -g AAAAAAATGGCGCACATCGTGCGCCATTTTTCACTTCACAGGTACTATTACTTG -g AAAAAAACCCGCTGATTAAGCGGGTTTTGAATTCTTGCTGACGTATCTTACAGAGCGATTACG -g AAAAAATGGCGCACATCGTGCGCCATTTTTCACTTCACAGGTACTATTACTTG -g AAAAAAAAGCACCGCAATTAGGCGGTGCTACATTAATCACTAT -g GGTGAAACTGACCGATAAGCCGGGTTCTGTCGTGGACAGTCATTCATCTAGGCCAGCAATC -g GGTGAAACTGACCGATAAGCCGGGTTCTGTCGTGGACAGTCATTCATCTA -g AGGTGAAACTGACCGATAAGCCGGGTTCTGTCGTGGACAGTCATTCATCTA  -g TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT -g AAAAAGGGAGCACTGTATTCACAGTGCTCCCGGTTCGTTTCGCAGCATTCCGGCTA -g TGGTGGAGCTGGCGGGAGTTGAACCCGCGTCCGAAATTCCTACATCCTCGGTACTACATGCTTAGTCAGT -g AGATCGGAAGAGCACACGTCTG E.coli_R1_qual > E.coli_R1_qual_noadapt.fastq -O 5 -m 20 -o E.coli_R1.fastq
+#Pair End 2
+cutadapt -g TGGTGGAGCTGGCGGGAGTTGAACCCGCGTCCGAAATTCCTACATCCTCGGTACTACATGC -g AAAAAAACGCCTGCTCTTATTACGGAGCAGGCGTTAAAACAGGTCTGTATGA -g CGGACGGACACGCCACTAACAAACTAG -g AAAAGGGAGCACTGTATTCACAGTGCTCCCGGTTCGTTTCGCAGCATT -g CTTTACATTCGCTTGCCAGCTG -g CGGACGGACACGCCACTAACAAACTAGCCTG -g GGTGAAACTGACCGATAAGCCGGGTTCTGTCGTGGACAGTCATTCATCTAGGCCAGCAATCGCTCACT -g AAAAAAATGGCGCACATCGTGCGCCATTTTTCACTTCACAGGTACTATTACTTG -g AAAAAAACCCGCTGATTAAGCGGGTTTTGAATTCTTGCTGACGTATCTTACAGAGCGATTACG -g AAAAAATGGCGCACATCGTGCGCCATTTTTCACTTCACAGGTACTATTACTTG -g AAAAAAAAGCACCGCAATTAGGCGGTGCTACATTAATCACTAT -g GGTGAAACTGACCGATAAGCCGGGTTCTGTCGTGGACAGTCATTCATCTAGGCCAGCAATC -g GGTGAAACTGACCGATAAGCCGGGTTCTGTCGTGGACAGTCATTCATCTA -g AGGTGAAACTGACCGATAAGCCGGGTTCTGTCGTGGACAGTCATTCATCTA  -g TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT -g AAAAAGGGAGCACTGTATTCACAGTGCTCCCGGTTCGTTTCGCAGCATTCCGGCTA -g TGGTGGAGCTGGCGGGAGTTGAACCCGCGTCCGAAATTCCTACATCCTCGGTACTACATGCTTAGTCAGT -g AGATCGGAAGAGCACACGTCTG E.coli_R2_qual > E.coli_R2_qual_noadapt.fastq -O 5 -m 20 -o E.coli_R2.fastq
+
+################################################################ 
+#Use only sequences with two passed filter reads -> this is my own script but
+#There is also a parameter in cutadapt
+#perl fastq_remove_reads.pl file_R2_001_good2.fastq file_bad2.fastq
+#perl fastq_remove_reads.pl file_R1_001_good2.fastq file_bad2.fastq
+#ls -l
+
+################################################################ 
+#Alignment & Mapping w/ Tuxedo Trinity (Part 1)
+cd /home/jonathan7/Documents/Comp_Micro/Tuxedo/
+
+#Build Genome
+bowtie2-build /home/jonathan7/Documents/Comp_Micro/Tuxedo/Ecoli_genome.fa /home/jonathan7/Documents/Comp_Micro/Tuxedo/Ecoli_genome_bowtie
+#Align reads / mapping
+tophat2 -I 1000 -i 20 --library-type fr-firststrand -o tophat2_ecoli /home/jonathan7/Documents/Comp_Micro/Tuxedo/*bowtie_index* /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R1.fastq /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R2.fastq
+
+##################
+#Counting & Sorting BAM reads
+samtools index tophat2_ecoli/accepted_hits.bam
+
+#Filter BAM File
+samtools view -F 256 -b -h tophat2_ecoli/accepted_hits.bam > accepted_hits_uniq1.bam
+samtools index accepted_hits_uniq1.bam
+
+#Sort BAM By name
+samtools sort accepted_hits_uniq1.bam -o accepted_hits_uniq_sorted1.bam
+samtools index accepted_hits_uniq_sorted1.bam
+
+#Sort Bam by PE vs SE
+samtools view -bf 1 accepted_hits_uniq_sorted1.bam > foo.paired-end1.bam
+samtools view -bF 1 accepted_hits_uniq_sorted1.bam > foo.single-end1.bam
+################################################################ 
+#From this point there are two options
+# 1)Produce counts through HT-Seq2 and normalize by FPKM, this is typical for metabolic modeling input
+# 2)Use Cufflinks & Cuffdiff as an input into DESEQ2 or edgeR for differential expression
+################################################################ 
+#Option 1
+#Final Counting
+htseq-count --format=bam --order=name --stranded=no -m union -a 20 -t exon -i gene_id /home/jonathan/Documents/Comp_Micro/htseqresults/foo.paired-end1.bam /home/jonathan/Documents/Comp_Micro/htseqresults/merged_E.coli.gtf > /home/jonathan/Documents/Comp_Micro/htseqresults/output/E.coli_htseq_counts_pos_sorted.out
+################################################################ 
+
+#Option 2 (Done with three replicates)
+#Trinity (Part 2)
+#Reconstruct transcripts using gene annotation ( -g)
+cd /home/jonathan7/Documents/Comp_Micro/Tuxedo/
+cufflinks -g /home/jonathan7/Documents/Comp_Micro/Tuxedo/Ecoli_geneannotation.gtf --no-update-check --overlap-radius 1 --library-type fr-firststrand -o cufflinks_ecoli1 /home/jonathan7/Documents/Comp_Micro/Tuxedo/foo.paired-end1.bam
+cufflinks -g /home/jonathan7/Documents/Comp_Micro/Tuxedo/Ecoli_geneannotation.gtf --no-update-check --overlap-radius 1 --library-type fr-firststrand -o cufflinks_ecoli2 /home/jonathan7/Documents/Comp_Micro/Tuxedo/foo.paired-end2.bam
+cufflinks -g /home/jonathan7/Documents/Comp_Micro/Tuxedo/Ecoli_geneannotation.gtf --no-update-check --overlap-radius 1 --library-type fr-firststrand -o cufflinks_ecoli3 /home/jonathan7/Documents/Comp_Micro/Tuxedo/foo.paired-end3.bam
+echo /home/jonathan7/Documents/Comp_Micro/Tuxedo/cufflinks_ecoli1/transcripts.gtf  > ecoli1_assemblies.txt
+
+cufflinks --no-update-check --overlap-radius 1 --library-type fr-firststrand -o cufflinks.set1 /home/jonathan7/Documents/Comp_Micro/Tuxedo/tophat2.set1/tophat2.set1.right.fq.gz
+cufflinks --no-update-check --overlap-radius 1 --library-type fr-firststrand -o cufflinks.set2 /home/jonathan7/Documents/Comp_Micro/Tuxedo/tophat2.set2/tophat2.set2.right.fq.gz
+cufflinks --no-update-check --overlap-radius 1 --library-type fr-firststrand -o cufflinks.set3 /home/jonathan7/Documents/Comp_Micro/Tuxedo/tophat2.set3/tophat2.set3.right.fq.gz
+#Rename Cufflinks Transcripts 
+mv cufflinks.set1/transcripts.gtf cufflinks.set1/set1.transcripts.gtf
+mv cufflinks.set2/transcripts.gtf cufflinks.set2/set2.transcripts.gtf
+mv cufflinks.set3/transcripts.gtf cufflinks.set3/set3.transcripts.gtf
+
+#Merge separate assembled transscripts into cohesive text files
+echo cufflinks.set1/set1.transcripts.gtf > assemblies.txt
+echo cufflinks.set2/set2.transcripts.gtf >> assemblies.txt
+echo cufflinks.set3/set3.transcripts.gtf >> assemblies.txt
+
+#Verify that transcripts are listed in this file
+cat assemblies.txt
+
+#Merge transcripts
+cuffmerge -s /home/jonathan7/Documents/Comp_Micro/Tuxedo/Ecoli_genome.fa /home/jonathan7/Documents/Comp_Micro/Tuxedo/assemblies.txt
+
+#Differential Expression
+cuffdiff --no-update-check --library-type fr-firststrand -o diff_out_ecoli -b /home/jonathan7/Documents/Comp_Micro/Tuxedo/Ecoli_genome.fa -L Set1,Set2,Set3 -u /home/jonathan7/Documents/Comp_Micro/Tuxedo/merged.gtf /home/jonathan7/Documents/Comp_Micro/Tuxedo/accepted_hits_uniq_sorted1.bam /home/jonathan7/Documents/Comp_Micro/Tuxedo/accepted_hits_uniq_sorted2.bam /home/jonathan7/Documents/Comp_Micro/Tuxedo/accepted_hits_uniq_sorted3.bam
+
+#Examine Results @ gene-level expression
+head diff_out_ecoli/gene_exp.diff
+#Continue to Analysis in R pipeline file
+
+
+
