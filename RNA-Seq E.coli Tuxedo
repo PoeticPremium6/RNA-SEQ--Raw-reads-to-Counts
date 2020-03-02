@@ -3,42 +3,6 @@ chmod +x E.coli_QC_Mapping
 #NOTE: if you want to analyze Transcriptome data with three replicates for Differential Expression, this code can be edited
 
 
-################################################################
-#gzip files recursive
-
-#Quality Check (FASTA)
-gunzip -r /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R1.fastq.gz
-gunzip -r /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R2.fastq.gz
-
-################################################################ 
-#If desired, turn FASTQ -> FASTA to save size
-#-Q33 parameter tells that Illumina is being used, rather than Sanger
-#./fastq_to_fasta -i /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R1.fastq -o /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R1 -Q33
-#./fastq_to_fasta -i /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R1.fastq -o /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R2 -Q33
-#cd /work_zfs2/sukem065/software/
-
-###quality trimming 
-cd /home/jonathan7/Documents/Comp_Micro/Schreiber/gzip_prac/
-#R1
-prinseq-lite.pl -min_len 20 -ns_max_n 8 -min_qual_mean 15 -trim_qual_left 15 -trim_qual_right 15 -trim_tail_left 40 -trim_tail_right 40 - out_format 3 -fastq /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R1 -out_good /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R1_qual -out_bad /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R1_bad
-
-#R2
-prinseq-lite.pl -min_len 20 -ns_max_n 8 -min_qual_mean 15 -trim_qual_left 15 -trim_qual_right 15 -trim_tail_left 40 -trim_tail_right 40 - out_format 3 -fastq /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R2 -out_good /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R2_qual -out_bad /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R2_bad
-
-################################################################ 
-###adapter trimming 
-cd /home/jonathan7/Documents/Comp_Micro/RNA-Seq/
-#Pair End 1
-cutadapt -g TGGTGGAGCTGGCGGGAGTTGAACCCGCGTCCGAAATTCCTACATCCTCGGTACTACATGC -g AAAAAAACGCCTGCTCTTATTACGGAGCAGGCGTTAAAACAGGTCTGTATGA -g CGGACGGACACGCCACTAACAAACTAG -g AAAAGGGAGCACTGTATTCACAGTGCTCCCGGTTCGTTTCGCAGCATT -g CTTTACATTCGCTTGCCAGCTG -g CGGACGGACACGCCACTAACAAACTAGCCTG -g GGTGAAACTGACCGATAAGCCGGGTTCTGTCGTGGACAGTCATTCATCTAGGCCAGCAATCGCTCACT -g AAAAAAATGGCGCACATCGTGCGCCATTTTTCACTTCACAGGTACTATTACTTG -g AAAAAAACCCGCTGATTAAGCGGGTTTTGAATTCTTGCTGACGTATCTTACAGAGCGATTACG -g AAAAAATGGCGCACATCGTGCGCCATTTTTCACTTCACAGGTACTATTACTTG -g AAAAAAAAGCACCGCAATTAGGCGGTGCTACATTAATCACTAT -g GGTGAAACTGACCGATAAGCCGGGTTCTGTCGTGGACAGTCATTCATCTAGGCCAGCAATC -g GGTGAAACTGACCGATAAGCCGGGTTCTGTCGTGGACAGTCATTCATCTA -g AGGTGAAACTGACCGATAAGCCGGGTTCTGTCGTGGACAGTCATTCATCTA  -g TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT -g AAAAAGGGAGCACTGTATTCACAGTGCTCCCGGTTCGTTTCGCAGCATTCCGGCTA -g TGGTGGAGCTGGCGGGAGTTGAACCCGCGTCCGAAATTCCTACATCCTCGGTACTACATGCTTAGTCAGT -g AGATCGGAAGAGCACACGTCTG E.coli_R1_qual > E.coli_R1_qual_noadapt.fastq -O 5 -m 20 -o E.coli_R1.fastq
-#Pair End 2
-cutadapt -g TGGTGGAGCTGGCGGGAGTTGAACCCGCGTCCGAAATTCCTACATCCTCGGTACTACATGC -g AAAAAAACGCCTGCTCTTATTACGGAGCAGGCGTTAAAACAGGTCTGTATGA -g CGGACGGACACGCCACTAACAAACTAG -g AAAAGGGAGCACTGTATTCACAGTGCTCCCGGTTCGTTTCGCAGCATT -g CTTTACATTCGCTTGCCAGCTG -g CGGACGGACACGCCACTAACAAACTAGCCTG -g GGTGAAACTGACCGATAAGCCGGGTTCTGTCGTGGACAGTCATTCATCTAGGCCAGCAATCGCTCACT -g AAAAAAATGGCGCACATCGTGCGCCATTTTTCACTTCACAGGTACTATTACTTG -g AAAAAAACCCGCTGATTAAGCGGGTTTTGAATTCTTGCTGACGTATCTTACAGAGCGATTACG -g AAAAAATGGCGCACATCGTGCGCCATTTTTCACTTCACAGGTACTATTACTTG -g AAAAAAAAGCACCGCAATTAGGCGGTGCTACATTAATCACTAT -g GGTGAAACTGACCGATAAGCCGGGTTCTGTCGTGGACAGTCATTCATCTAGGCCAGCAATC -g GGTGAAACTGACCGATAAGCCGGGTTCTGTCGTGGACAGTCATTCATCTA -g AGGTGAAACTGACCGATAAGCCGGGTTCTGTCGTGGACAGTCATTCATCTA  -g TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT -g AAAAAGGGAGCACTGTATTCACAGTGCTCCCGGTTCGTTTCGCAGCATTCCGGCTA -g TGGTGGAGCTGGCGGGAGTTGAACCCGCGTCCGAAATTCCTACATCCTCGGTACTACATGCTTAGTCAGT -g AGATCGGAAGAGCACACGTCTG E.coli_R2_qual > E.coli_R2_qual_noadapt.fastq -O 5 -m 20 -o E.coli_R2.fastq
-
-################################################################ 
-#Use only sequences with two passed filter reads -> this is my own script but
-#There is also a parameter in cutadapt
-#perl fastq_remove_reads.pl file_R2_001_good2.fastq file_bad2.fastq
-#perl fastq_remove_reads.pl file_R1_001_good2.fastq file_bad2.fastq
-#ls -l
 
 ################################################################ 
 #Alignment & Mapping w/ Tuxedo Trinity (Part 1)
