@@ -1,0 +1,38 @@
+# HISAT -> StringTie -> BallGown -> FeatureCounts
+module load samtools1.3.1 #samtools 1.2 > needed
+module load cufflinks
+module load htseq0.6.1 
+
+#cd /home/sukem113/Software/hisat2-2.1.0/
+#./hisat2
+
+#cd /home/sukem113/Software/stringtie-2.0.3/
+#./stringtie
+
+cd /work_beegfs/sukem113/eMed_Colon_Data/Tuxedo/
+
+#Build genome index
+/home/sukem113/Software/hisat2-2.1.0/hisat2-build /work_beegfs/sukem113/Genomes/GRCh37_genome.fa /home/sukem113/Genomes/HISAT2/hg2
+#Align Reads to Index
+./hisat2 -p 8 --dta -x work_beegfs/sukem113/Genomes/GRCH37.fa -1 /work_beegfs/sukem113/eMed_Colon_Data/QC/E02874_PostTrim1.fastq.gz -2 /work_beegfs/sukem113/eMed_Colon_Data/QC/E02874_PostTrim2.fastq.gz -S /work_beegfs/sukem113/eMed_Colon_Data/HISAT2_testing/E02874.sam
+
+#SAM to BAM Conversion
+samtools view -S -b E02874.sam > E02874.bam
+samtools view E02874.bam | head
+
+#Filter BAM File
+samtools view -F 256 -b -h E02874.bam > uniq_E02874.bam
+#samtools index uniq_E02874.bam
+
+#samtools 'sort'
+samtools sort uniq_E02874.bam -o uniq_E02874_sorted.bam
+samtools index uniq_E02874_sorted.bam
+
+#Sort BAM by PE vs SE
+samtools view -bf 1 uniq_E02874_sorted.bam > foo.paired-end_E02874.bam
+samtools view -bf 1 uniq_E02874_sorted.bam > foo.single-end_E02874.bam
+
+
+#Start StringTie
+/home/sukem113/Software/stringtie-2.0.3/stringtie /work_beegfs/sukem113/eMed_Colon_Data/HISAT2_testing/foo.paired-end_E02874.bam -p 8 -G /work_beegfs/sukem113/Genomes/gene_annotation/genes.gtf -e -B -o /work_beegfs/sukem113/eMed_Colon_Data/HISAT2_testing/transcripts.gtf -A /work_beegfs/sukem113/eMed_Colon_Data/HISAT2_testing/gene_abundances.tsv
+
