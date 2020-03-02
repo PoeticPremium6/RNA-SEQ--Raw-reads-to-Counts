@@ -1,0 +1,49 @@
+
+################################################################
+#gzip files recursive
+#(FASTQ)
+gunzip -r /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R1.fastq.gz
+gunzip -r /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R2.fastq.gz
+
+################################################################ 
+#If desired, turn FASTQ -> FASTA to save size
+#-Q33 parameter tells that Illumina is being used, rather than Sanger
+#./fastq_to_fasta -i /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R1.fastq -o /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R1 -Q33
+#./fastq_to_fasta -i /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R1.fastq -o /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R2 -Q33
+################################################################ 
+#I typically run FASTQC three times:
+#1) After unzipping the raw reads
+#2) Following the quality trimming with PrinSeq
+#3) Following the adapter trimming with CutAdapt
+
+#FASTQC (Option 1)
+./fastqc /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R1 -o /home/jonathan7/Documents/Comp_Micro/RNA-Seq/FASTQC
+./fastqc /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R2 -o /home/jonathan7/Documents/Comp_Micro/RNA-Seq/FASTQC
+
+###quality trimming 
+#R1
+prinseq-lite.pl -min_len 20 -ns_max_n 8 -min_qual_mean 15 -trim_qual_left 15 -trim_qual_right 15 -trim_tail_left 40 -trim_tail_right 40 - out_format 3 -fastq /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R1 -out_good /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R1_qual -out_bad /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R1_bad
+#R2
+prinseq-lite.pl -min_len 20 -ns_max_n 8 -min_qual_mean 15 -trim_qual_left 15 -trim_qual_right 15 -trim_tail_left 40 -trim_tail_right 40 - out_format 3 -fastq /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R2 -out_good /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R2_qual -out_bad /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R2_bad
+
+#FASTQC (Option 2)
+./fastqc /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R1_qual -o /home/jonathan7/Documents/Comp_Micro/RNA-Seq/FASTQC
+./fastqc /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R2_qual -o /home/jonathan7/Documents/Comp_Micro/RNA-Seq/FASTQC
+
+###adapter trimming 
+cd /home/jonathan7/Documents/Comp_Micro/RNA-Seq/
+#Pair End 1
+cutadapt -g TGGTGGAGCTGGCGGGAGTTGAACCCGCGTCCGAAATTCCTACATCCTCGGTACTACATGC -g AAAAAAACGCCTGCTCTTATTACGGAGCAGGCGTTAAAACAGGTCTGTATGA -g CGGACGGACACGCCACTAACAAACTAG -g AAAAGGGAGCACTGTATTCACAGTGCTCCCGGTTCGTTTCGCAGCATT -g CTTTACATTCGCTTGCCAGCTG -g CGGACGGACACGCCACTAACAAACTAGCCTG -g GGTGAAACTGACCGATAAGCCGGGTTCTGTCGTGGACAGTCATTCATCTAGGCCAGCAATCGCTCACT -g AAAAAAATGGCGCACATCGTGCGCCATTTTTCACTTCACAGGTACTATTACTTG -g AAAAAAACCCGCTGATTAAGCGGGTTTTGAATTCTTGCTGACGTATCTTACAGAGCGATTACG -g AAAAAATGGCGCACATCGTGCGCCATTTTTCACTTCACAGGTACTATTACTTG -g AAAAAAAAGCACCGCAATTAGGCGGTGCTACATTAATCACTAT -g GGTGAAACTGACCGATAAGCCGGGTTCTGTCGTGGACAGTCATTCATCTAGGCCAGCAATC -g GGTGAAACTGACCGATAAGCCGGGTTCTGTCGTGGACAGTCATTCATCTA -g AGGTGAAACTGACCGATAAGCCGGGTTCTGTCGTGGACAGTCATTCATCTA  -g TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT -g AAAAAGGGAGCACTGTATTCACAGTGCTCCCGGTTCGTTTCGCAGCATTCCGGCTA -g TGGTGGAGCTGGCGGGAGTTGAACCCGCGTCCGAAATTCCTACATCCTCGGTACTACATGCTTAGTCAGT -g AGATCGGAAGAGCACACGTCTG E.coli_R1_qual > E.coli_R1_qual_noadapt.fastq -O 5 -m 20 -o E.coli_R1.fastq
+#Pair End 2
+cutadapt -g TGGTGGAGCTGGCGGGAGTTGAACCCGCGTCCGAAATTCCTACATCCTCGGTACTACATGC -g AAAAAAACGCCTGCTCTTATTACGGAGCAGGCGTTAAAACAGGTCTGTATGA -g CGGACGGACACGCCACTAACAAACTAG -g AAAAGGGAGCACTGTATTCACAGTGCTCCCGGTTCGTTTCGCAGCATT -g CTTTACATTCGCTTGCCAGCTG -g CGGACGGACACGCCACTAACAAACTAGCCTG -g GGTGAAACTGACCGATAAGCCGGGTTCTGTCGTGGACAGTCATTCATCTAGGCCAGCAATCGCTCACT -g AAAAAAATGGCGCACATCGTGCGCCATTTTTCACTTCACAGGTACTATTACTTG -g AAAAAAACCCGCTGATTAAGCGGGTTTTGAATTCTTGCTGACGTATCTTACAGAGCGATTACG -g AAAAAATGGCGCACATCGTGCGCCATTTTTCACTTCACAGGTACTATTACTTG -g AAAAAAAAGCACCGCAATTAGGCGGTGCTACATTAATCACTAT -g GGTGAAACTGACCGATAAGCCGGGTTCTGTCGTGGACAGTCATTCATCTAGGCCAGCAATC -g GGTGAAACTGACCGATAAGCCGGGTTCTGTCGTGGACAGTCATTCATCTA -g AGGTGAAACTGACCGATAAGCCGGGTTCTGTCGTGGACAGTCATTCATCTA  -g TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT -g AAAAAGGGAGCACTGTATTCACAGTGCTCCCGGTTCGTTTCGCAGCATTCCGGCTA -g TGGTGGAGCTGGCGGGAGTTGAACCCGCGTCCGAAATTCCTACATCCTCGGTACTACATGCTTAGTCAGT -g AGATCGGAAGAGCACACGTCTG E.coli_R2_qual > E.coli_R2_qual_noadapt.fastq -O 5 -m 20 -o E.coli_R2.fastq
+
+#FASTQC (Option 3)
+./fastqc /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R2.fastq -o /home/jonathan7/Documents/Comp_Micro/RNA-Seq/FASTQC
+./fastqc /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R2.fastq -o /home/jonathan7/Documents/Comp_Micro/RNA-Seq/FASTQC
+
+################################################################ 
+#Use only sequences with two passed filter reads -> this is my own script but
+#There is also a parameter in cutadapt
+#perl fastq_remove_reads.pl /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R1.fastq  file_bad2.fastq
+#perl fastq_remove_reads.pl /home/jonathan7/Documents/Comp_Micro/RNA-Seq/E.coli_R2.fastq  file_bad2.fastq
+#ls -l
